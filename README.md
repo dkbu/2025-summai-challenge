@@ -21,6 +21,7 @@ Your task: build a **minimal, real-time collaborative BPMN diagram editor**.
 
 - Use any frontend framework (React, Vue, etc.).
 - Backend would be preferrably in FastAPI (Python) but you can use any other backend framework you're comfortable with.
+- No authentication is required.
 - Keep it simple.
 
 ---
