@@ -101,10 +101,7 @@ export default function App() {
         modelerRef.current.saveXML({ format: true }).then(({ xml }) => {
             fetch(`${server_url}/diagram`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ "new_diagram": xml }) 
+                body: JSON.stringify({ "new_diagram": xml })
             });
         }).catch(err => {
             console.error('Error saving BPMN XML:', err);
