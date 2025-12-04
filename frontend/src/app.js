@@ -9,7 +9,7 @@ export function createBpmnModeler(container) {
             bindTo: window
         }
     });
-    
+
     return modeler;
 }
 
@@ -23,9 +23,7 @@ export default function App() {
             setTimeout(() => {
                 try {
                     // Create BpmnJS instance using our function
-                    modelerRef.current = createBpmnModeler(containerRef.current);
-                    
-                    return modelerRef.current.createDiagram();
+                    return initializeBpmnModeler();
                 } catch (error) {
                     console.error('Error initializing BPMN modeler:', error);
                 }
@@ -40,18 +38,47 @@ export default function App() {
         };
     }, []);
 
+    function onModelChanged(event) {
+        console.log('Model changed');
+    }
+
+    function initializeBpmnModeler() {
+        modelerRef.current = createBpmnModeler(containerRef.current);
+        let diagram = modelerRef.current.createDiagram();
+
+        // hook into events
+        var eventBus = modelerRef.current.get('eventBus');
+        var events = [
+            'element.hover',
+            'element.out',
+            'element.click',
+            'element.dblclick',
+            'element.mousedown',
+            'element.mouseup'
+        ];
+
+        events.forEach(function (event) {
+
+            eventBus.on(event, onModelChanged);
+        });
+
+        return diagram;
+    }
+
     return (
         <div>
             <h1>Summai Challenge - BPMN Editor</h1>
-            <div 
+            <div
                 ref={containerRef}
-                id="canvas" 
-                style={{ 
-                    width: '100%', 
-                    height: '600px', 
-                    border: '1px solid #ccc' 
+                id="canvas"
+                style={{
+                    width: '100%',
+                    height: '600px',
+                    border: '1px solid #ccc'
                 }}
             />
         </div>
     );
 }
+
+
