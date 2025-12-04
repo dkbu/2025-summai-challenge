@@ -1,22 +1,10 @@
 from typing import Annotated
 from fastapi import FastAPI, Depends
 from models import DiagramStorage, DiagramRequest, UserCounter
+from dependencies import get_diagram_storage, get_user_counter
 
 
 app = FastAPI()
-
-
-# Create a global instance or use a proper dependency pattern
-diagram_storage = DiagramStorage()
-user_counter = UserCounter()
-
-
-async def get_diagram_storage():
-    return diagram_storage
-
-
-async def get_user_counter():
-    return user_counter
 
 
 @app.get("/diagram")
