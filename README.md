@@ -48,3 +48,80 @@ Please include the following:
 ---
 
 Have fun - and all the best from SUMM AI!
+
+## 📦 Installation
+
+### Prerequisites
+- **Python 3.11+** (for backend)
+- **Node.js 18+** and **npm** (for frontend)
+- **UV** (Python package manager - recommended) or **pip**
+
+### Backend Setup
+
+1. **Navigate to backend directory:**
+   ```bash
+   cd backend
+   ```
+
+2. **Install dependencies using UV (recommended):**
+   ```bash
+   uv venv
+   uv pip install -e .
+   ```
+   
+   **Or using traditional pip:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+### Frontend Setup
+
+1. **Navigate to frontend directory:**
+   ```bash
+   cd frontend
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+## 🚀 Running the Application
+
+### Start Backend Server
+
+1. **Navigate to backend directory:**
+   ```bash
+   cd backend
+   ```
+
+2. **Run the FastAPI server:**
+   ```bash
+   fastapi run
+   ```
+   
+   The backend server will start at: `http://127.0.0.1:8000`
+
+### Start Frontend Application
+
+1. **Open a new terminal and navigate to frontend directory:**
+   ```bash
+   cd frontend
+   ```
+
+2. **Start the React development server:**
+   ```bash
+   npm start
+   ```
+   
+   The frontend application will start at: `http://localhost:3000`
+
+### Access the Application
+
+- Open your web browser and go to: `http://localhost:3000`
+- The BPMN editor will load with real-time collaboration features
+- Open multiple browser tabs/windows to test real-time collaboration
+
+## 🔧 API Endpoints
+
+- automatic API documentation at `http://127.0.0.1:8000/docs`
