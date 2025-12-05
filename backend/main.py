@@ -1,8 +1,9 @@
 from typing import Annotated
-from fastapi import FastAPI, Depends
+from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from models import DiagramStorage, DiagramRequest, UserCounter
 from dependencies import get_diagram_storage, get_user_counter
+import xml.etree.ElementTree as ET
 
 
 app = FastAPI()
@@ -24,20 +25,45 @@ async def get_diagram(d: Annotated[DiagramStorage, Depends(get_diagram_storage)]
 
 @app.post("/diagram")
 async def save_diagram(request: DiagramRequest, d: Annotated[DiagramStorage, Depends(get_diagram_storage)]):
+    # Validate the diagram content
+    if not request.new_diagram or not request.new_diagram.strip():
+        raise HTTPException(status_code=400, detail="Diagram content cannot be empty")
+    
+    # Check diagram size (prevent extremely large payloads)
+    if len(request.new_diagram) > 10 * 1024 * 1024:  # 10MB limit
+        raise HTTPException(status_code=413, detail="Diagram content too large (max 10MB)")
+    
+    # Validate XML structure
+    try:
+        ET.fromstring(request.new_diagram)
+    except ET.ParseError as e:
+        raise HTTPException(status_code=400, detail=f"Invalid XML format: {str(e)}")
+    
+    # Check if it's a BPMN diagram (basic validation)
+    if "bpmn" not in request.new_diagram.lower() and "definitions" not in request.new_diagram:
+        raise HTTPException(status_code=400, detail="Content does not appear to be a valid BPMN diagram")
+    
     d.save_diagram(request.new_diagram)
-    return {"status": "Diagram saved"}
+    return {"status": "Diagram saved", "size": len(request.new_diagram)}
 
 
 @app.post("/user")
 async def add_user(users: Annotated[UserCounter, Depends(get_user_counter)]):
-    users.increment()
-    return {"status": "User added"}
+    # Prevent user count from going too high (basic DoS protection)
+    if users.user_count >= 1000:
+        raise HTTPException(status_code=429, detail="Maximum user limit reached")
+    
+    current_count = users.increment()
+    return {"status": "User added", "user_count": current_count}
 
 
 @app.delete("/user")
 async def delete_user(users: Annotated[UserCounter, Depends(get_user_counter)]):
-    users.decrement()
-    return {"status": "User deleted"}
+    if users.user_count <= 0:
+        raise HTTPException(status_code=400, detail="No users to remove")
+    
+    current_count = users.decrement()
+    return {"status": "User deleted", "user_count": current_count}
 
 
 @app.get("/users")
@@ -48,5 +74,8 @@ async def get_users(users: Annotated[UserCounter, Depends(get_user_counter)]):
 @app.post("/cleanup")
 async def cleanup_user(users: Annotated[UserCounter, Depends(get_user_counter)]):
     """Handle cleanup requests from sendBeacon during page unload"""
-    users.decrement()
-    return {"status": "User cleanup completed"}
+    if users.user_count <= 0:
+        return {"status": "No users to cleanup", "user_count": 0}
+    
+    current_count = users.decrement()
+    return {"status": "User cleanup completed", "user_count": current_count}
