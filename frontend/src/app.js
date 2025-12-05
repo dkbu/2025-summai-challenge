@@ -20,6 +20,7 @@ export default function App() {
 
     const containerRef = useRef(null);
     const modelerRef = useRef(null);
+    const debounceTimeoutRef = useRef(null);
 
     useEffect(() => {
         let intervalCounterId = null;
@@ -59,10 +60,10 @@ export default function App() {
                                 fetchUserCount();
                             }, 1000);
 
-                            // Fetch the initial diagram
+                            // Fetch the initial diagram less frequently
                             intervalDiagramId = setInterval(() => {
                                 fetchDiagram();
-                            }, 100);
+                            }, 2000); // Changed from 100ms to 2s
 
                         } catch (error) {
                             console.error('Error initializing BPMN modeler:', error);
@@ -87,6 +88,11 @@ export default function App() {
                 clearInterval(intervalDiagramId);
             }
 
+            // Clear any pending debounced saves
+            if (debounceTimeoutRef.current) {
+                clearTimeout(debounceTimeoutRef.current);
+            }
+
             // Clean up BPMN modeler and remove user
             if (modelerRef.current) {
                 removeUser();
@@ -97,15 +103,40 @@ export default function App() {
     }, [server_url]);
 
     function onModelChanged(event) {
-        console.log('Model changed');
-        modelerRef.current.saveXML({ format: true }).then(({ xml }) => {
-            fetch(`${server_url}/diagram`, {
-                method: 'POST',
-                body: JSON.stringify({ "new_diagram": xml })
+        console.log('Model changed - debouncing...');
+        
+        // Clear existing timeout if there is one
+        if (debounceTimeoutRef.current) {
+            clearTimeout(debounceTimeoutRef.current);
+        }
+        
+        // Set new timeout to wait 500ms after last change
+        debounceTimeoutRef.current = setTimeout(() => {
+            console.log('Saving diagram after debounce delay');
+            modelerRef.current.saveXML({ format: true }).then(({ xml }) => {
+                fetch(`${server_url}/diagram`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ "new_diagram": xml })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Diagram saved successfully:', data);
+                })
+                .catch(err => {
+                    console.error('Error saving BPMN XML:', err);
+                });
+            }).catch(err => {
+                console.error('Error getting BPMN XML:', err);
             });
-        }).catch(err => {
-            console.error('Error saving BPMN XML:', err);
-        });
+        }, 500); // Wait 500ms after last change
     }
 
     function fetchDiagram() {
