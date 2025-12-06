@@ -63,13 +63,7 @@ Have fun - and all the best from SUMM AI!
    cd backend
    ```
 
-2. **Install dependencies using UV (recommended):**
-   ```bash
-   uv venv
-   uv pip install -e .
-   ```
-   
-   **Or using traditional pip:**
+2. **Install dependencies using pip:**
    ```bash
    pip install -r requirements.txt
    ```
